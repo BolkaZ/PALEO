@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+
+{% load static %}
+
+{% block content %}
+<div class="cart-page">
+    <div class="cart-container">
+        <h2>Заявка ID: {{ order_id }}</h2>
+        
+        <div class="cart-layout">
+            <!-- Карточка периода -->
+            <div class="period-cart-card">
+                <h3>{{ period.name }}</h3>
+                <img src="{{ period.image }}" alt="Картинка периода" class="period-cart-image">
+                <p>Найдено животных: {{ period.found_quantity }}</p>
+            </div>
+            
+            <!-- Карточки животных -->
+            <div class="animals-list">
+                {% if cart_items %}
+                    {% for item in cart_items %}
+                    <div class="animal-card">
+                        <p class="animal-name">Животное: {{ item.name }}</p>
+                        <p class="animal-group">Отряд: {{ item.group }}</p>
+                        <p class="animal-quantity">Количество найденных: {{ item.quantity }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>Корзина пуста.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
