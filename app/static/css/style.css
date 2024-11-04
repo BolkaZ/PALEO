@@ -275,5 +275,38 @@ body {
     height: 200px;
     border-radius: 10px;
     border: 3px solid #753526;
+}
 
+/* Стиль для кнопки добавления в заявку */
+.add-to-bid-button {
+    height: 40px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 18px;
+    background-color: #EFEEEC;
+    color: #000000;
+    cursor: pointer;
+    border: 3px solid #753526;
+}
+
+.add-to-bid-button:hover {
+    background-color: #EFEEEC;
+    color: #753526;
+}
+
+.order-form {
+     /* Фиксированное позиционирование */
+    bottom: 20px; /* Отступ от низа страницы */
+    right: 20px; /* Отступ от правого края страницы */
+    z-index: 1000; /* Чтобы кнопка находилась поверх других элементов */
+}
+
+.order-button {
+    padding: 10px 20px; /* Отступы для кнопки */
+    border-radius: 10px; /* Закругленные углы */
+    background-color: #753526; /* Цвет фона кнопки */
+    color: white; /* Цвет текста кнопки */
+    border: none; /* Без рамки */
+    cursor: pointer; /* Курсор при наведении */
 }

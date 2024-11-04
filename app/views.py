@@ -1,6 +1,9 @@
-from django.shortcuts import render, get_object_or_404
-from .models import Period, Animal, Bid
+from django.shortcuts import get_object_or_404, redirect
+from .models import Period, Bid, Animal
 from django.contrib.auth.models import User
+from django.shortcuts import redirect
+from django.shortcuts import render
+
 
 # description_data = [
 #     {
@@ -36,52 +39,76 @@ from django.contrib.auth.models import User
 #     }
 # ]
 
-orders = {
-    0: [
-        {'id': 4, 'name': 'Платеозавр', 'group': 'Ящеротазовые', 'quantity': 3},
-        {'id': 5, 'name': 'Целофизис', 'group': 'Ящеротазовые', 'quantity': 2}
-    ],
-    1: [
-        {'id': 5, 'name': 'Тираннозавр', 'quantity': 1},
-        {'id': 6, 'name': 'Велоцираптор', 'quantity': 5}
-    ],
-    2: [
-        {'id': 7, 'name': 'Брахиозавр', 'quantity': 2}
-    ]
-}
 
-
-
-def getDetailPage(request, id):
-    # Получаем период по ID или 404 если не найден
-    period = get_object_or_404(Period, id=id)
-    
-    # Получаем всех животных, связанных с этим периодом
-    animals = period.animals.all()
-
-    # Передаем данные в шаблон
-    return render(request, 'description.html', {'period': period, 'animals': animals})
-
+# orders = {
+#     0: [
+#         {'id': 4, 'name': 'Платеозавр', 'group': 'Ящеротазовые', 'quantity': 3},
+#         {'id': 5, 'name': 'Целофизис', 'group': 'Ящеротазовые', 'quantity': 2}
+#     ],
+#     1: [
+#         {'id': 5, 'name': 'Тираннозавр', 'quantity': 1},
+#         {'id': 6, 'name': 'Велоцираптор', 'quantity': 5}
+#     ],
+#     2: [
+#         {'id': 7, 'name': 'Брахиозавр', 'quantity': 2}
+#     ]
+# }
 
 
 USER_ID = 1
 
+
+def add_to_bid(request, period_id):
+    # Получаем период
+    period = get_object_or_404(Period, id=period_id)
+
+    # Проверяем, есть ли пользователь, если нет, можно добавить логику для анонимных пользователей
+    user = request.user if request.user.is_authenticated else None
+
+    # Пытаемся найти существующую заявку для этого периода и пользователя, если она уже есть
+    bid, created = Bid.objects.get_or_create(user=user, period=period)
+
+    # Добавляем животных к заявке, если нужно (здесь можно добавить логику выбора животных)
+    if 'animals' in request.POST:  # Предположим, что животные передаются в POST-запросе
+        animal_ids = request.POST.getlist('animals')  # Получаем ID животных из формы
+        animals = Animal.objects.filter(id__in=animal_ids)
+        bid.animals.add(*animals)
+
+    # Сохраняем заявку и перенаправляем пользователя
+    bid.save()
+    return redirect('bid')
+
+
+# def bid_view(request, period_id=None):
+#     user = get_object_or_404(User, id=USER_ID)
+
+#     # Получаем период по ID, если указан, иначе первый доступный
+#     period = get_object_or_404(Period, id=period_id) if period_id else Period.objects.first()
+    
+#     if period:
+#         # Получаем или создаем заявку для текущего пользователя и указанного периода
+#         bid, created = Bid.objects.get_or_create(user=user, period=period)
+#         bid_items = Animal.objects.filter(period=period)
+#     else:
+#         bid_items = []
+
+#     # Рендерим шаблон animal.html с данными пользователя, периода и животных
+#     return render(request, 'animal.html', {
+#         'user': user,
+#         'period': period,
+#         'bid_items': bid_items
+#     })
+
 def bid_view(request):
-    user = get_object_or_404(User, id=USER_ID)  # Получаем пользователя по ID
-    period = Period.objects.first()  # Получаем первый период, или используйте логику для получения нужного периода
-
-    if period:
-        # Сохраняем заявку в базу данных для данного пользователя
-        bid, created = Bid.objects.get_or_create(user=user, period=period)
-        bid_items = Animal.objects.filter(period=period)  # Получаем животных для периода
+    bid = Bid.objects.first()  # Получение первой заявки для примера; измените по необходимости
+    if bid:
+        period = bid.period
+        animals = bid.animals.all()
     else:
-        bid_items = []
+        period = None
+        animals = []
 
-    return render(request, 'animal.html', {
-        'user': user,
-        'period': period,
-        'bid_items': bid_items
-    })
+    return render(request, 'animal.html', {'period': period, 'cart_items': animals})
 
 
 def index(request):
@@ -95,7 +122,6 @@ def index(request):
         results = Period.objects.all()
 
     return render(request, 'main.html', {'results': results, 'query': query})
-
 
 
 def getDetailPage(request, id):
