@@ -58,6 +58,9 @@ from django.shortcuts import render
 USER_ID = 1
 
 
+from django.shortcuts import redirect, get_object_or_404
+from .models import Period, Bid
+
 def add_to_bid(request, period_id):
     # Получаем период
     period = get_object_or_404(Period, id=period_id)
@@ -68,42 +71,32 @@ def add_to_bid(request, period_id):
     # Пытаемся найти существующую заявку для этого периода и пользователя, если она уже есть
     bid, created = Bid.objects.get_or_create(user=user, period=period)
 
-    # Добавляем животных к заявке, если нужно (здесь можно добавить логику выбора животных)
-    if 'animals' in request.POST:  # Предположим, что животные передаются в POST-запросе
-        animal_ids = request.POST.getlist('animals')  # Получаем ID животных из формы
-        animals = Animal.objects.filter(id__in=animal_ids)
-        bid.animals.add(*animals)
+    # Сохраняем ID заявки в сессии
+    request.session['cart_bid_id'] = bid.pk
 
     # Сохраняем заявку и перенаправляем пользователя
     bid.save()
-    return redirect('bid')
+    return redirect('bid_detail', bid_id=bid.pk)
 
 
-# def bid_view(request, period_id=None):
-#     user = get_object_or_404(User, id=USER_ID)
 
-#     # Получаем период по ID, если указан, иначе первый доступный
-#     period = get_object_or_404(Period, id=period_id) if period_id else Period.objects.first()
+
+def bid_view(request, bid_id=None):
+    # Приоритет использования `bid_id` из URL-параметра, затем — из сессии
+    if not bid_id:
+        bid_id = request.session.get('cart_bid_id')
     
-#     if period:
-#         # Получаем или создаем заявку для текущего пользователя и указанного периода
-#         bid, created = Bid.objects.get_or_create(user=user, period=period)
-#         bid_items = Animal.objects.filter(period=period)
-#     else:
-#         bid_items = []
+    # Выводим для диагностики
+    print("Session cart_bid_id:", request.session.get('cart_bid_id'))
+    print("Final bid_id to use:", bid_id)
 
-#     # Рендерим шаблон animal.html с данными пользователя, периода и животных
-#     return render(request, 'animal.html', {
-#         'user': user,
-#         'period': period,
-#         'bid_items': bid_items
-#     })
+    # Если найден `bid_id`, загружаем соответствующую заявку
+    bid = get_object_or_404(Bid, pk=bid_id) if bid_id else None
 
-def bid_view(request):
-    bid = Bid.objects.first()  # Получение первой заявки для примера; измените по необходимости
+    # Получаем связанные объекты, если заявка найдена
     if bid:
         period = bid.period
-        animals = bid.animals.all()
+        animals = Animal.objects.filter(period=period)
     else:
         period = None
         animals = []
@@ -111,17 +104,27 @@ def bid_view(request):
     return render(request, 'animal.html', {'period': period, 'cart_items': animals})
 
 
+
+
 def index(request):
     query = request.GET.get('q', '')
-    
+
     if query:
-        # Фильтруем записи по названию, используя метод filter()
+        # Фильтруем записи по названию
         results = Period.objects.filter(name__icontains=query)
     else:
         # Если запроса нет, получаем все записи
         results = Period.objects.all()
 
-    return render(request, 'main.html', {'results': results, 'query': query})
+    # Получаем актуальный bid_id из сессии
+    bid_id = request.session.get('cart_bid_id', None)
+
+    return render(request, 'main.html', {
+        'results': results,
+        'query': query,
+        'bid_id': bid_id  # Передаём bid_id в шаблон
+    })
+
 
 
 def getDetailPage(request, id):

@@ -20,7 +20,7 @@
                 <input type="text" class="search-bar" name="q" value="{{ query }}" placeholder="Поиск по сайту..." required>
             </form>
             <div class="cart">
-                <a href="{% url 'bid' %}">
+                <a href="{% url 'bid_detail' bid_id %}">
                     <img src="http://127.0.0.1:9000/zzz/png7.png" alt="Cart Icon">
                     <span class="cart-count">2</span>
                 </a>

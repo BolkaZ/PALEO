@@ -22,11 +22,11 @@
                     <div class="animal-card">
                         <p class="animal-name">Животное: {{ item.name }}</p>
                         <p class="animal-group">Отряд: {{ item.group }}</p>
-                        <p class="animal-quantity">Количество найденных: {{ item.quantity }}</p>
+                        <p class="animal-quantity">Количество найденных: {{ item.quantity_found }}</p>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p>Корзина пуста.</p>
+                    <p>Нет животных</p>
                 {% endif %}
             </div>
         </div>
